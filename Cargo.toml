@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[target.stable-aarch64-apple-darwin]
+rustflags = ["-C", "target-feature=+crt-static"]
 
 [dependencies]
-actix-web = "4"
+axum = "0.7.4"
+tokio = { version = "1", features = ["rt-multi-thread"] }

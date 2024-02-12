@@ -1,28 +1,23 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use axum::{
+    routing::get,
+    Router,
+};
+use std::env;
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
+#[tokio::main]
+async fn main() {
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
+    let mut healthcheck_path = String::from("/healthz");
+    let healthcheck_override = env::var("HEALTHCHECK_PATH").is_ok();
+    if healthcheck_override {
+        healthcheck_path = env::var("HEALTHCHECK_PATH").unwrap();
+    }
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+    let app = Router::new()
+        .route("/", get(|| async { "Hello, World!" }))
+        .route(&healthcheck_path, get(|| async {""}));
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
-    })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
+    // run our app with hyper, listening globally on port 3000
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
